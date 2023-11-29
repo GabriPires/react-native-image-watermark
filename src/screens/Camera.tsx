@@ -1,6 +1,7 @@
 import { CameraCapturedPicture, Camera as ExpoCamera } from 'expo-camera'
+import * as MediaLibrary from 'expo-media-library'
 import { useRef, useState } from 'react'
-import { Button, Image, Pressable, StyleSheet, View } from 'react-native'
+import { Button, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import Marker, { Position } from 'react-native-image-marker'
 
 export function Camera() {
@@ -24,10 +25,12 @@ export function Camera() {
   }
 
   async function addWatermarkAndSave(picture: CameraCapturedPicture) {
+    const { uri } = picture
+
     try {
       Marker.markText({
         backgroundImage: {
-          src: picture.uri,
+          src: uri,
         },
         watermarkTexts: [
           {
@@ -54,7 +57,7 @@ export function Camera() {
           watermarkImages: [
             {
               src: 'https://i.pinimg.com/originals/1c/c9/36/1cc936353a99784491557c68a5b2e292.jpg',
-              scale: 0.1,
+              scale: 0.05,
               position: {
                 position: Position.bottomLeft,
               },
@@ -67,6 +70,11 @@ export function Camera() {
     } catch (error) {
       console.log(error)
     }
+  }
+
+  async function handleSavePicture(pictureUri: string) {
+    await MediaLibrary.saveToLibraryAsync(pictureUri)
+    setFinalPicture(null)
   }
 
   if (!permission?.granted) {
@@ -83,11 +91,30 @@ export function Camera() {
   return (
     <View style={styles.container}>
       {finalPicture ? (
-        <Image
-          source={{ uri: finalPicture }}
-          style={styles.image}
-          alt="Foto tirada pela câmera"
-        />
+        <View style={styles.finalPictureContainer}>
+          <Image
+            source={{ uri: finalPicture }}
+            style={styles.image}
+            alt="Foto tirada pela câmera"
+          />
+          <View style={styles.finalPictureButtons}>
+            <Pressable
+              style={[
+                styles.finalPictureButton,
+                styles.finalPictureButtonDelete,
+              ]}
+              onPress={() => setFinalPicture(null)}
+            >
+              <Text style={styles.finalPictureButtonText}>Excluir</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.finalPictureButton, styles.finalPictureButtonSave]}
+              onPress={() => handleSavePicture(finalPicture)}
+            >
+              <Text style={styles.finalPictureButtonText}>Salvar</Text>
+            </Pressable>
+          </View>
+        </View>
       ) : (
         <ExpoCamera
           ref={camera}
@@ -126,5 +153,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
   },
-  image: { flex: 1, resizeMode: 'contain' },
+  finalPictureButton: {
+    alignItems: 'center',
+    borderRadius: 5,
+    justifyContent: 'center',
+    padding: 10,
+    width: 130,
+  },
+  finalPictureButtonDelete: {
+    backgroundColor: '#e54',
+    marginRight: 10,
+  },
+  finalPictureButtonSave: {
+    backgroundColor: '#54e',
+  },
+  finalPictureButtonText: {
+    color: '#fff',
+  },
+  finalPictureButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+    width: '100%',
+  },
+  finalPictureContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  image: { height: 500, resizeMode: 'contain', width: 500 },
 })
