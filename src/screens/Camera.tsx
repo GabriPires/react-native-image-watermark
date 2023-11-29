@@ -37,6 +37,12 @@ export function Camera() {
             },
             style: {
               color: '#ffffff',
+              shadowStyle: {
+                color: '#000000',
+                dx: 0,
+                dy: 1,
+                radius: 2,
+              },
             },
           },
         ],
