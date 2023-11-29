@@ -1,6 +1,7 @@
-import { Camera as ExpoCamera } from 'expo-camera'
+import { CameraCapturedPicture, Camera as ExpoCamera } from 'expo-camera'
 import { useRef, useState } from 'react'
 import { Button, Image, Pressable, StyleSheet, View } from 'react-native'
+import Marker, { Position } from 'react-native-image-marker'
 
 export function Camera() {
   const [finalPicture, setFinalPicture] = useState<string | null>(null)
@@ -19,7 +20,47 @@ export function Camera() {
       exif: true,
     })
 
-    console.log(picture)
+    await addWatermarkAndSave(picture)
+  }
+
+  async function addWatermarkAndSave(picture: CameraCapturedPicture) {
+    try {
+      Marker.markText({
+        backgroundImage: {
+          src: picture.uri,
+        },
+        watermarkTexts: [
+          {
+            text: 'Hello World\nThis is my watermark',
+            positionOptions: {
+              position: Position.bottomRight,
+            },
+            style: {
+              color: '#ffffff',
+            },
+          },
+        ],
+      }).then((uri) => {
+        Marker.markImage({
+          backgroundImage: {
+            src: `file://${uri}`,
+          },
+          watermarkImages: [
+            {
+              src: 'https://i.pinimg.com/originals/1c/c9/36/1cc936353a99784491557c68a5b2e292.jpg',
+              scale: 0.1,
+              position: {
+                position: Position.bottomLeft,
+              },
+            },
+          ],
+        }).then((uri) => {
+          setFinalPicture(`file://${uri}`)
+        })
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   if (!permission?.granted) {
